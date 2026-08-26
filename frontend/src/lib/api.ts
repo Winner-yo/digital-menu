@@ -1,10 +1,11 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import Cookies from 'js-cookie';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const rawBase = process.env.NEXT_PUBLIC_API_URL || '';
+const BASE_URL = rawBase.replace(/\/$/, '');
 
 export const api: AxiosInstance = axios.create({
-  baseURL: `${BASE_URL}/api`,
+  baseURL: BASE_URL ? `${BASE_URL}/api` : '/api',
   headers: { 'Content-Type': 'application/json' },
   timeout: 30000,
   withCredentials: true,
@@ -32,7 +33,7 @@ api.interceptors.response.use(
       try {
         const refreshToken = Cookies.get('refreshToken') || localStorage.getItem('refreshToken');
         if (!refreshToken) throw new Error('No refresh token');
-        const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, { refreshToken });
+        const { data } = await axios.post(`${BASE_URL || ''}/api/auth/refresh`, { refreshToken });
         const newToken = data.data.accessToken;
         Cookies.set('accessToken', newToken, { expires: 7, secure: true, sameSite: 'lax' });
         localStorage.setItem('accessToken', newToken);
@@ -99,6 +100,7 @@ export const paymentApi = {
 
 export const restaurantApi = {
   getPublic: (slug: string) => api.get(`/restaurants/public/${slug}`),
+  getPublicTables: (slug: string) => api.get(`/restaurants/public/${slug}/tables`),
   getProfile: () => api.get('/restaurants/profile'),
   updateProfile: (data: Record<string, unknown>) => api.put('/restaurants/profile', data),
   getTables: () => api.get('/restaurants/tables'),
@@ -137,6 +139,18 @@ export const discountApi = {
   delete: (id: string) => api.delete(`/discounts/${id}`),
   getPromoCodes: () => api.get('/discounts/promo-codes'),
   createPromoCode: (data: Record<string, unknown>) => api.post('/discounts/promo-codes', data),
+};
+
+export const notificationApi = {
+  getAll: () => api.get('/notifications'),
+  markRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllRead: () => api.post('/notifications/read-all'),
+};
+
+export const authApi = {
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token: string, password: string) =>
+    api.post('/auth/reset-password', { token, password }),
 };
 
 export const uploadApi = {
