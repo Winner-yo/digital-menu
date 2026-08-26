@@ -68,8 +68,7 @@ export default function CheckoutPage() {
       const rest = res.data.data;
       setDeliveryZones(rest.deliveryZones || []);
     }).catch(() => {});
-    // Also fetch tables
-    restaurantApi.getTables().then((res) => {
+    restaurantApi.getPublicTables(restaurantId).then((res) => {
       setTables(res.data.data || []);
     }).catch(() => {});
   }, [restaurantId]);

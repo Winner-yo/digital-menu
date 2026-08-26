@@ -99,8 +99,8 @@ export default function LoginPage() {
         {/* Demo credentials */}
         <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
           <p className="text-xs text-amber-700 font-medium mb-1">Demo Credentials</p>
-          <p className="text-xs text-amber-600">Email: demo@habesha.com</p>
-          <p className="text-xs text-amber-600">Password: password123</p>
+          <p className="text-xs text-amber-600">Email: owner@habesha.com</p>
+          <p className="text-xs text-amber-600">Password: Password123!</p>
         </div>
       </div>
     </div>
