@@ -1,5 +1,6 @@
 import { prisma } from '../../prisma/client';
 import { AppError } from '../../middleware/errorHandler';
+import { Prisma } from '@prisma/client';
 
 export const menuService = {
   // ---- Categories ----
@@ -48,7 +49,7 @@ export const menuService = {
     const { page = 1, limit = 50, ...filters } = query;
     const skip = (page - 1) * limit;
 
-    const where: Parameters<typeof prisma.menuItem.findMany>[0]['where'] = {
+    const where: Prisma.MenuItemWhereInput = {
       restaurantId,
       ...(filters.categoryId && { categoryId: filters.categoryId }),
       ...(filters.isAvailable !== undefined && { isAvailable: filters.isAvailable }),
@@ -125,7 +126,7 @@ export const menuService = {
     };
     return prisma.menuItem.update({
       where: { id },
-      data: itemData as Parameters<typeof prisma.menuItem.update>[0]['data'],
+      data: itemData as Prisma.MenuItemUpdateInput,
       include: { variants: true, addOns: true },
     });
   },
