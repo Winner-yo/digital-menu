@@ -6,8 +6,10 @@ import { env } from '../../config/env';
 
 export const qrCodeService = {
   async generateRestaurantQR(restaurantId: string, label?: string) {
+    const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+    if (!restaurant) throw new AppError('Restaurant not found', 404);
     const code = generateQRCode();
-    const url = `${env.FRONTEND_URL}/menu/${restaurantId}?qr=${code}`;
+    const url = `${env.FRONTEND_URL}/menu/${restaurant.slug}?qr=${code}`;
 
     const qr = await prisma.qRCode.create({
       data: { restaurantId, code, url, label: label || 'Restaurant QR' },
@@ -26,8 +28,10 @@ export const qrCodeService = {
     const table = await prisma.table.findFirst({ where: { id: tableId, restaurantId } });
     if (!table) throw new AppError('Table not found', 404);
 
+    const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+    if (!restaurant) throw new AppError('Restaurant not found', 404);
     const code = generateQRCode();
-    const url = `${env.FRONTEND_URL}/menu/${restaurantId}?table=${table.tableNumber}&qr=${code}`;
+    const url = `${env.FRONTEND_URL}/menu/${restaurant.slug}?table=${table.tableNumber}&qr=${code}`;
 
     const qr = await prisma.qRCode.create({
       data: {
