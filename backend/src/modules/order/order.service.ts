@@ -1,7 +1,7 @@
 import { prisma } from '../../prisma/client';
 import { AppError } from '../../middleware/errorHandler';
 import { generateOrderNumber } from '../../utils/helpers';
-import { OrderStatus, OrderType, PaymentMethod } from '@prisma/client';
+import { OrderStatus, OrderType, PaymentMethod, Prisma } from '@prisma/client';
 
 export interface CreateOrderDto {
   restaurantId: string;
@@ -173,6 +173,16 @@ export const orderService = {
       },
     });
 
+    await prisma.notification.create({
+      data: {
+        restaurantId: dto.restaurantId,
+        orderId: order.id,
+        type: 'NEW_ORDER',
+        title: 'New order',
+        body: `Order ${orderNumber} from ${dto.customerName} — ${dto.orderType.replace('_', ' ')}`,
+      },
+    });
+
     return order;
   },
 
@@ -208,7 +218,7 @@ export const orderService = {
         }
       : undefined;
 
-    const where: Parameters<typeof prisma.order.findMany>[0]['where'] = {
+    const where: Prisma.OrderWhereInput = {
       restaurantId,
       ...(filters.status && { status: filters.status }),
       ...(filters.orderType && { orderType: filters.orderType }),
