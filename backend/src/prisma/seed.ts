@@ -124,10 +124,10 @@ async function main() {
       sortOrder: 3,
     },
     {
-      name: 'Drinks',
-      nameAmharic: 'መጠጦች',
-      description: 'Coffee, tea, and juices',
-      sortOrder: 4,
+      name: 'Breakfast',
+      nameAmharic: 'ቁርስ',
+      description: 'Morning Ethiopian favorites',
+      sortOrder: 5,
     },
   ];
 
@@ -227,6 +227,94 @@ async function main() {
       isVegan: true,
       image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800',
     },
+    {
+      category: 'Traditional',
+      name: 'Beyaynetu',
+      nameAmharic: 'በያይነቱ',
+      description: 'Colorful vegetarian combination platter on injera.',
+      price: 280,
+      isVegetarian: true,
+      isVegan: true,
+      isPopular: true,
+      image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800',
+    },
+    {
+      category: 'Traditional',
+      name: 'Firfir',
+      nameAmharic: 'ፍርፍር',
+      description: 'Shredded injera tossed in spiced wat.',
+      price: 180,
+      isVegetarian: true,
+      image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+    },
+    {
+      category: 'Meat',
+      name: 'Dulet',
+      nameAmharic: 'ዱለት',
+      description: 'Minced tripe and liver with mitmita and kibe.',
+      price: 320,
+      isSpicy: true,
+      spicyLevel: 2,
+      image: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=800',
+    },
+    {
+      category: 'Vegetarian',
+      name: 'Gomen',
+      nameAmharic: 'ጎመን',
+      description: 'Collard greens sautéed with garlic and spices.',
+      price: 160,
+      isVegetarian: true,
+      isVegan: true,
+      image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800',
+    },
+    {
+      category: 'Vegetarian',
+      name: 'Alicha Wat',
+      nameAmharic: 'አልጫ ወጥ',
+      description: 'Mild turmeric stew with vegetables or chicken.',
+      price: 240,
+      isVegetarian: true,
+      image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800',
+    },
+    {
+      category: 'Breakfast',
+      name: 'Chechebsa',
+      nameAmharic: 'ቆጮ',
+      description: 'Torn kitta bread with berbere and niter kibbeh.',
+      price: 150,
+      isVegetarian: true,
+      isPopular: true,
+      image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
+    },
+    {
+      category: 'Breakfast',
+      name: 'Ful',
+      nameAmharic: 'ፉል',
+      description: 'Fava beans with onion, tomato, and injera or bread.',
+      price: 140,
+      isVegetarian: true,
+      isVegan: true,
+      image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800',
+    },
+    {
+      category: 'Drinks',
+      name: 'Macchiato',
+      nameAmharic: 'ማክያቶ',
+      description: 'Ethiopian espresso with a splash of steamed milk.',
+      price: 70,
+      isVegetarian: true,
+      image: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=800',
+    },
+    {
+      category: 'Drinks',
+      name: 'Avocado Juice',
+      nameAmharic: 'አቮካዶ ጭማቂ',
+      description: 'Creamy avocado juice, a local favorite.',
+      price: 100,
+      isVegetarian: true,
+      isVegan: true,
+      image: 'https://images.unsplash.com/photo-1623065424072-4ce1e0b0d0b2?w=800',
+    },
   ];
 
   for (const item of items) {
@@ -236,6 +324,7 @@ async function main() {
     if (existing) continue;
 
     const { category, ...data } = item;
+    if (!categoryIds[category]) continue;
     await prisma.menuItem.create({
       data: {
         restaurantId: restaurant.id,
@@ -244,6 +333,49 @@ async function main() {
       },
     });
   }
+
+  for (const tableNumber of ['2', '3', '4', '5', '6']) {
+    await prisma.table.upsert({
+      where: {
+        restaurantId_tableNumber: { restaurantId: restaurant.id, tableNumber },
+      },
+      update: {},
+      create: { restaurantId: restaurant.id, tableNumber, capacity: 4 },
+    });
+  }
+
+  const existingZone = await prisma.deliveryZone.findFirst({
+    where: { restaurantId: restaurant.id, name: 'Bole' },
+  });
+  if (!existingZone) {
+    await prisma.deliveryZone.create({
+      data: {
+        restaurantId: restaurant.id,
+        name: 'Bole',
+        areas: ['Bole', 'Airport', 'Meskel Square', 'Kazanchis'],
+        deliveryFee: 80,
+        minimumOrder: 200,
+        estimatedTime: 35,
+      },
+    });
+  }
+
+  await prisma.promoCode.upsert({
+    where: {
+      restaurantId_code: { restaurantId: restaurant.id, code: 'WELCOME10' },
+    },
+    update: {},
+    create: {
+      restaurantId: restaurant.id,
+      code: 'WELCOME10',
+      description: '10% off first orders',
+      discountType: 'PERCENTAGE',
+      discountValue: 10,
+      minimumOrder: 200,
+      maxDiscount: 80,
+      isActive: true,
+    },
+  });
 
   console.log('Seed complete.');
   console.log('Demo restaurant: http://localhost:3000/menu/habesha-restaurant');
