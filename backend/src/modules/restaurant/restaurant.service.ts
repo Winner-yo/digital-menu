@@ -1,11 +1,12 @@
 import { prisma } from '../../prisma/client';
 import { AppError } from '../../middleware/errorHandler';
 import { slugify } from '../../utils/helpers';
+import { Prisma } from '@prisma/client';
 
 export const restaurantService = {
   async getPublicProfile(slug: string) {
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { slug, isActive: true },
+    const restaurant = await prisma.restaurant.findFirst({
+      where: { isActive: true, OR: [{ slug }, { id: slug }] },
       include: {
         openingHours: { orderBy: { day: 'asc' } },
         announcements: {
@@ -58,7 +59,7 @@ export const restaurantService = {
     return prisma.$transaction(async (tx) => {
       const restaurant = await tx.restaurant.update({
         where: { id: restaurantId },
-        data: restaurantData as Parameters<typeof tx.restaurant.update>[0]['data'],
+        data: restaurantData as Prisma.RestaurantUpdateInput,
       });
 
       if (openingHours) {

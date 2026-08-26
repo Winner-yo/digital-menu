@@ -29,6 +29,14 @@ router.put('/profile', authenticate, authorizeRestaurant, async (req: Request, r
   } catch (err) { next(err); }
 });
 
+router.get('/public/:slug/tables', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const restaurant = await restaurantService.getPublicProfile(req.params.slug);
+    const tables = await restaurantService.getTables(restaurant.id);
+    sendSuccess(res, tables);
+  } catch (err) { next(err); }
+});
+
 // Get tables
 router.get('/tables', authenticate, authorizeRestaurant, async (req: Request, res: Response, next: NextFunction) => {
   try {
