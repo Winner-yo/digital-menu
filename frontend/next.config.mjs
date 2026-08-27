@@ -3,8 +3,18 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+function vercelDistDir() {
+  if (!process.env.VERCEL) return '.next';
+  const initCwd = process.env.INIT_CWD;
+  if (!initCwd) return '.next';
+  if (path.resolve(initCwd) === path.resolve(__dirname)) return '.next';
+  // Vercel project root is the monorepo root; Next runs from frontend/.
+  return path.join('..', '.next');
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: vercelDistDir(),
   typescript: {
     ignoreBuildErrors: true,
   },
