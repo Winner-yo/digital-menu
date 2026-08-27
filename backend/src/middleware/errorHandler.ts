@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { env } from '../config/env';
+import { ZodError } from 'zod';
 
 export class AppError extends Error {
   constructor(
@@ -25,6 +25,26 @@ export const errorHandler = (
       success: false,
       error: err.message,
       errors: err.errors,
+    });
+    return;
+  }
+
+  if (err instanceof ZodError) {
+    res.status(400).json({
+      success: false,
+      error: err.issues[0]?.message || 'Invalid request',
+      errors: err.flatten().fieldErrors,
+    });
+    return;
+  }
+
+  if (
+    err.name === 'PrismaClientInitializationError' ||
+    err.constructor.name === 'PrismaClientInitializationError'
+  ) {
+    res.status(503).json({
+      success: false,
+      error: 'Database unavailable. Check DATABASE_URL on Vercel.',
     });
     return;
   }
@@ -57,8 +77,7 @@ export const errorHandler = (
 
   res.status(500).json({
     success: false,
-    error: 'Internal server error',
-    ...(env.NODE_ENV === 'development' && { detail: err.message, stack: err.stack }),
+    error: err.message || 'Internal server error',
   });
 };
 

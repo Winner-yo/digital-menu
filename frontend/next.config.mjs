@@ -33,18 +33,35 @@ const nextConfig = {
     externalDir: true,
     outputFileTracingRoot: path.join(__dirname, '..'),
     outputFileTracingIncludes: {
-      '/api/**': ['../backend/**/*'],
+      '/api/**': [
+        '../backend/**/*',
+        '../node_modules/.prisma/**/*',
+        '../node_modules/@prisma/client/**/*',
+      ],
     },
     serverComponentsExternalPackages: ['@prisma/client', 'prisma', 'bcryptjs', 'qrcode', 'sharp'],
     serverActions: { allowedOrigins: ['localhost:3000'] },
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     // Keep `@/` working even if TypeScript is not installed (Vercel + NODE_ENV=production).
     // Alias `@/` only — a bare `@` alias would break scoped packages like `@prisma/client`.
     config.resolve.alias = {
       ...config.resolve.alias,
       '@/': path.join(__dirname, 'src') + '/',
     };
+    if (isServer) {
+      const previous = config.externals;
+      config.externals = [
+        ...(Array.isArray(previous) ? previous : previous ? [previous] : []),
+        ({ request }, callback) => {
+          if (request === '@prisma/client' || request?.startsWith('.prisma/')) {
+            callback(null, `commonjs ${request}`);
+            return;
+          }
+          callback();
+        },
+      ];
+    }
     return config;
   },
   async rewrites() {

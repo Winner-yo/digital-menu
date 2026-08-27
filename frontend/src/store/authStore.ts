@@ -42,9 +42,10 @@ export const useAuthStore = create<AuthStore>()(
           const { user, accessToken, refreshToken, restaurantId } = data.data;
           setAuthTokens(accessToken, refreshToken);
           set({ user, accessToken, restaurantId, isAuthenticated: true, isLoading: false });
-        } catch {
+        } catch (err: unknown) {
           set({ isLoading: false });
-          throw new Error('Invalid email or password');
+          const error = err as { response?: { data?: { error?: string } } };
+          throw new Error(error.response?.data?.error || 'Invalid email or password');
         }
       },
 

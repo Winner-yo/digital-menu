@@ -1,0 +1,16 @@
+{
+  "name": "Ethiopian Digital Menu",
+  "short_name": "EthioMenu",
+  "description": "Digital menu and online food ordering for Ethiopian restaurants",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAF8",
+  "theme_color": "#ef7010",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

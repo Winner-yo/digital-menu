@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 
 import { env } from './config/env';
+import { prisma } from './prisma/client';
 import { errorHandler, notFound } from './middleware/errorHandler';
 
 import authRoutes from './modules/auth/auth.routes';
@@ -67,17 +68,30 @@ export function createApp(): Express {
   app.use(cookieParser());
 
   app.use('/api/payments/webhook', express.raw({ type: '*/*' }));
-  app.use(express.json({ limit: '10mb' }));
+  app.use((req, res, next) => {
+    if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body) && Object.keys(req.body).length > 0) {
+      next();
+      return;
+    }
+    express.json({ limit: '10mb' })(req, res, next);
+  });
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   app.use('/uploads', express.static(path.join(process.cwd(), env.UPLOAD_DIR)));
 
-  const health = (_req: express.Request, res: express.Response) => {
+  const health = async (_req: express.Request, res: express.Response) => {
+    let database = 'ok';
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+    } catch (err) {
+      database = err instanceof Error ? err.message : 'unavailable';
+    }
     res.json({
-      status: 'ok',
+      status: database === 'ok' ? 'ok' : 'degraded',
       timestamp: new Date().toISOString(),
       version: '1.0.0',
       env: env.NODE_ENV,
+      database,
     });
   };
 
