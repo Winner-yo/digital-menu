@@ -7,31 +7,38 @@ declare global {
 }
 
 function databaseUrl(): string {
-  let url = process.env.DATABASE_URL || '';
-  url = url.replace(/&channel_binding=require/g, '').replace(/\?channel_binding=require&/, '?');
+  let url = String(process.env['DATABASE_URL'] ?? '').trim();
+  if (
+    (url.startsWith('"') && url.endsWith('"')) ||
+    (url.startsWith("'") && url.endsWith("'"))
+  ) {
+    url = url.slice(1, -1).trim();
+  }
+  url = url.replace(/\r|\n/g, '');
+  url = url.replace(/&channel_binding=require/g, '');
+  url = url.replace(/\?channel_binding=require&/, '?');
   url = url.replace(/\?channel_binding=require$/, '');
-  const isPooled = url.includes('-pooler.') || url.includes('pgbouncer=true');
-  if (isPooled && !url.includes('pgbouncer=')) {
-    url += (url.includes('?') ? '&' : '?') + 'pgbouncer=true';
-  }
-  if (isPooled && !url.includes('connection_limit=')) {
-    url += (url.includes('?') ? '&' : '?') + 'connection_limit=1';
-  }
-  if (!url.includes('connect_timeout=')) {
-    url += (url.includes('?') ? '&' : '?') + 'connect_timeout=15';
-  }
   return url;
 }
 
-export const prisma =
-  global.__prisma ||
-  new PrismaClient({
-    log: env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    datasources: {
-      db: { url: databaseUrl() },
-    },
-  });
+function getPrisma(): PrismaClient {
+  if (!global.__prisma) {
+    global.__prisma = new PrismaClient({
+      log: env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+      datasources: {
+        db: { url: databaseUrl() },
+      },
+    });
+  }
+  return global.__prisma;
+}
 
-global.__prisma = prisma;
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getPrisma();
+    const value = Reflect.get(client, prop, receiver) as unknown;
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
+});
 
 export default prisma;
