@@ -32,7 +32,6 @@
     "nodemailer": "6.9.14",
     "socket.io": "4.7.5",
     "axios": "1.7.2",
-    "crypto": "1.0.1",
     "cookie-parser": "1.4.6",
     "@prisma/client": "5.17.0",
     "prisma": "5.17.0",

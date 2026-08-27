@@ -6,10 +6,19 @@ dist/
 .next/
 out/
 
-# env (keep examples)
+# env (keep examples only)
 .env
+.env.*
+!.env.example
+!**/.env.example
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.vercel
+backend/.env
+frontend/.env
+frontend/.env.local
 
 # uploads
 uploads/

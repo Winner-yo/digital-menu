@@ -22,8 +22,20 @@ const nextConfig = {
   experimental: {
     externalDir: true,
     outputFileTracingRoot: path.join(__dirname, '..'),
+    outputFileTracingIncludes: {
+      '/api/**': ['../backend/**/*'],
+    },
     serverComponentsExternalPackages: ['@prisma/client', 'prisma', 'bcryptjs', 'qrcode', 'sharp'],
     serverActions: { allowedOrigins: ['localhost:3000'] },
+  },
+  webpack: (config) => {
+    // Keep `@/` working even if TypeScript is not installed (Vercel + NODE_ENV=production).
+    // Alias `@/` only — a bare `@` alias would break scoped packages like `@prisma/client`.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@/': path.join(__dirname, 'src') + '/',
+    };
+    return config;
   },
   async rewrites() {
     if (process.env.VERCEL) return [];
